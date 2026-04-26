@@ -170,8 +170,11 @@ if __name__ == "__main__":
     job_run_id = trigger_job(235502095043739)
     
     # Run pipeline
-    pipeline_update_id = trigger_pipeline("e6749830-f5a5-4182-a0c8-cb8c056cee85")
-    monitor_pipeline(pipeline_update_id)
+    PIPELINE_ID = "e6749830-f5a5-4182-a0c8-cb8c056cee85"
+    pipeline_update_id = trigger_pipeline(PIPELINE_ID)
+
+    if pipeline_update_id:
+        monitor_pipeline(PIPELINE_ID, pipeline_update_id)
 
     # Terminate cluster
     if new_cluster_id:
