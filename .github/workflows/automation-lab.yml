@@ -5,22 +5,68 @@ on:
     branches: [ main ]
 
 jobs:
-  run-lab:
+
+  # ── Job 1: Automation ───────────────────────────────────────────────────────────
+  run-automation:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      
+
       - name: Install dependencies
         run: pip install requests python-dotenv
-      
+
       - name: Run Databricks automation
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
           KOVAL_CLUSTER_ID: ${{ secrets.KOVAL_CLUSTER_ID }}
         run: python databricks_automation.py
+
+  # ── Job 2: CLI ──────────────────────────────────────────────────────────────
+  run-cli:
+    runs-on: ubuntu-latest
+    needs: run-automation
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests python-dotenv
+
+      - name: CLI — trigger job
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+          KOVAL_CLUSTER_ID: ${{ secrets.KOVAL_CLUSTER_ID }}
+        run: |
+          python cli.py trigger-job --job-id 235502095043739 --wait
+
+      - name: CLI — run notebook
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+          KOVAL_CLUSTER_ID: ${{ secrets.KOVAL_CLUSTER_ID }}
+        run: |
+          python cli.py run-notebook \
+            --path /Workspace/Users/kovalnasta919@softserve.academy/setup_rls_cls \
+            --param date=2026-04-21 \
+            --wait
+
+      - name: CLI — trigger pipeline
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+          KOVAL_CLUSTER_ID: ${{ secrets.KOVAL_CLUSTER_ID }}
+        run: |
+          python cli.py trigger-pipeline \
+            --pipeline-id e6749830-f5a5-4182-a0c8-cb8c056cee85 \
+            --wait
